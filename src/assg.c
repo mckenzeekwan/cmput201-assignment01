@@ -16,10 +16,11 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
+
     // COUNT FILES IN LIST
     char filepath[MAX_PATH];
     int total = 0;
-    while (fscanf(list_file, "%299s", filepath) == 1) {  // stores word it just read into filepath
+    while (fscanf(list_file, "%299s", filepath) == 1) {  // stores word it just read into filepath, %s means read until whitespace(inc newline)
         total++;
     }
     rewind(list_file);  // reset file pointer to the beginning
@@ -32,8 +33,8 @@ int main(int argc, char *argv[]) {
     while (fscanf(list_file, "%299s", filepath) == 1) {
         count++;
 
-        // EXTRACTING FILE NAME FROM PATH
-        char *base = filepath;  // creates pointer (base) to start of file path string
+        // EXTRACTING FILE NAME FROM PATH - dont use pointers
+        char *base = filepath;  // creates pointer (base) to the start of file path string
         for (char *p = filepath; *p != '\0'; p++) {  // loops through every character in filepath until the string ends
             if (*p == '/') {
                 base = p + 1;  // update base to point to character after the slash
@@ -57,11 +58,12 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
+
         // READING FILE HEADER AND NUMBER OF STOPS
         // header: "<int> <route_name>, <int> Stops"
         char line[256];
         int num_stops;
-        if (fgets(line, 256, schedule_file) == NULL || sscanf(line, "%*s %*[^,], %d", &num_stops) != 1) {
+        if (fgets(line, 256, schedule_file) == NULL || sscanf(line, "%*s %*[^,], %d", &num_stops) != 1) {  // try not to use caret
             fprintf(stderr, "Bad header in %s\n", filepath);
             fclose(schedule_file);
             continue;
