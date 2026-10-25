@@ -8,6 +8,7 @@
 #define MAX_ROUTE_ID 16
 #define MAX_TAPS 2000
 #define MAX_MATCHES 14
+#define MAX_HISTORY 2000
 
 // creating my arrays
 char route_ids[MAX_ROUTES][MAX_ROUTE_ID];
@@ -24,6 +25,11 @@ int tap_hour[MAX_TAPS], tap_minute[MAX_TAPS];
 char tap_type[MAX_TAPS];
 int tap_location[MAX_TAPS];
 int num_taps = 0;
+
+int hist_entry_stop[MAX_HISTORY];
+int hist_exit_stop[MAX_HISTORY];
+int hist_entry_hour[MAX_HISTORY];
+int hist_count = 0;
 
 // does the stop ID exist in any of the route's stop lists
 int stop_exists(int stop_id) {
@@ -145,6 +151,45 @@ void format_time(long minutes, char *out) {
     long mins = (total_seconds % 3600) / 60;
     long secs = total_seconds % 60;
     sprintf(out, "%ld:%02ld:%02ld", hrs, mins, secs);
+}
+
+// guess algorithm 
+int guess_exit(int entry_stop, int entry_hour) {
+    int candidate_stops[MAX_HISTORY];
+    int candidate_counts[MAX_HISTORY];
+    int num_candidates = 0;
+
+    for (int i = 0; i < hist_count; i++) {
+        if (hist_entry_stop[i] != entry_stop) continue;
+        if (hist_entry_hour[i] != entry_hour) continue;
+
+        // check if exit stop has been seen before
+        int found = 0;
+        for (int j = 0; j < num_candidates; j++) {
+            if (candidate_stops[j] == hist_exit_stop[i]) {
+                candidate_counts[j]++;
+                found = 1;
+                break;
+            }
+        }
+        if (!found) {
+            candidate_stops[num_candidates] = hist_exit_stop[i];
+            candidate_counts[num_candidates] = 1;
+            num_candidates++;
+        }
+
+    }
+
+    if (num_candidates == 0) return -1; // no matching history exists
+
+    // pick highest count, smaller stopID for ties
+    int best = 0;
+    for (int j = 1; j < num_candidates; j++) {
+        if (candidate_counts[j] > candidate_counts[best] || (candidate_counts[j] == candidate_counts[best] && candidate_stops[j] < candidate_stops[best])) {
+            best = j;
+        }
+    }
+    return candidate_stops[best];
 }
 
 int main(int argc, char *argv[]) { 
@@ -304,9 +349,29 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        if (tap_type[idx] == 'X') {
+        if (tap_type[idx] == 'X' || tap_type[idx] == 'M') {
             int entry_stop = tap_location[pending];
-            int exit_stop = tap_location[idx];
+            int exit_stop;
+            int guessed = 0;
+
+            if (tap_type[idx] == 'X') {
+                exit_stop = tap_location[idx];
+
+                if (hist_count < MAX_HISTORY) {
+                    hist_entry_stop[hist_count] = entry_stop;
+                    hist_exit_stop[hist_count] = exit_stop;
+                    hist_entry_hour[hist_count] = tap_hour[pending];
+                    hist_count++;
+                }
+            } else {
+                exit_stop = guess_exit(entry_stop, tap_hour[pending]);
+                guessed = 1;
+                if (exit_stop == -1) {
+                    pending = -1;
+                    continue;
+                }
+            }
+
 
             int matches[MAX_MATCHES];
             int match_count = find_matching_routes(entry_stop, exit_stop, matches);
@@ -327,6 +392,9 @@ int main(int argc, char *argv[]) {
                 format_time(exit_total - entry_total, dur);
 
                 fprintf(out, "%s %c,%s,%s,%s,%s,%s\n", route_ids[r], route_dirs[r], entry_name, exit_name, entry_iso, exit_iso, dur);
+                if (guessed) fprintf(out, ",Guessed");
+                fprintf(out, "\n");
+
             } else if (match_count > 1) {
                 char entry_name[MAX_NAME], exit_name[MAX_NAME];
                 find_stop_name(matches[0], entry_stop, entry_name);
@@ -361,6 +429,8 @@ int main(int argc, char *argv[]) {
                     format_time(exit_total - entry_total, dur);
 
                     fprintf(out, "%s %c,%s,%s,%s,%s,%s\n", route_ids[r], route_dirs[r], chosen_entry_name, chosen_exit_name, entry_iso, exit_iso, dur);
+                    if (guessed) fprintf(out, ",Guessed");
+                    fprintf(out, "\n");
                 }
             }
 
