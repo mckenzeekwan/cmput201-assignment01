@@ -51,7 +51,7 @@ int parse_tap(char *line, int i) {
 
     if (n != 8) {
         // try blank location format (if it is missing tap fare
-        n = sscanf(line, "%d%d-%d,%d:%d %2[AMP],%c", &month, &day, &yr, &hh, &mm, ampm, &type);
+        n = sscanf(line, "%d-%d-%d,%d:%d %2[AMP],%c", &month, &day, &yr, &hh, &mm, ampm, &type);
         if (n != 7) return 0; 
         if (type != 'M') return 0;
         loc = -1;
@@ -327,18 +327,45 @@ int main(int argc, char *argv[]) {
                 format_time(exit_total - entry_total, dur);
 
                 fprintf(out, "%s %c,%s,%s,%s,%s,%s\n", route_ids[r], route_dirs[r], entry_name, exit_name, entry_iso, exit_iso, dur);
+            } else if (match_count > 1) {
+                char entry_name[MAX_NAME], exit_name[MAX_NAME];
+                find_stop_name(matches[0], entry_stop, entry_name);
+                find_stop_name(matches[0], exit_stop, exit_name);
+
+                printf("Ambiguous trip detected:\n");
+                printf("Entry: %d (%s)\n", entry_stop, entry_name);
+                printf("Exit: %d (%s)\n", exit_stop, exit_name);
+                printf("Possible Routes:\n");
+                for (int m = 0; m < match_count; m++) {
+                    printf("%d. %s %c\n", m + 1, route_ids[matches[m]], route_dirs[matches[m]]);
+
+                }
+                printf("Select route (1-%d): ", match_count);
+
+                int choice;
+                scanf("%d", &choice);
+
+                if (choice >= 1 && choice <= match_count) {
+                    int r = matches[choice - 1];
+
+                    char chosen_entry_name[MAX_NAME], chosen_exit_name[MAX_NAME];
+                    find_stop_name(r, entry_stop, chosen_entry_name);
+                    find_stop_name(r, exit_stop, chosen_exit_name);
+
+                    char entry_iso[32], exit_iso[32], dur;
+                    format_iso(tap_year[pending], tap_month[pending], tap_day[pending], tap_hour[pending], tap_minute[pending], entry_iso);
+                    format_iso(tap_year[idx], tap_month[idx], tap_day[idx], tap_hour[idx], tap_minute[idx], exit_iso);
+
+                    long entry_total = total_minutes(tap_year[pending], tap_month[pending], tap_day[pending], tap_hour[pending], tap_minute[pending]);
+                    long exit_total = total_minutes(tap_year[idx], tap_month[idx], tap_day[idx], tap_hour[idx], tap_minute[idx]);
+                    format_time(exit_total - entry_total, dur);
+
+                    fprintf(out, "%s %c,%s,%s,%s,%s,%s\n", route_ids[r], route_dirs[r], chosen_entry_name, chosen_exit_name, entry_iso, exit_iso, dur);
+                }
             }
 
-            // printf("Trip: entry stop %d -> exit stop %d\n", entry_stop, exit_stop);
-            // printf("Matching routes: %d\n", match_count);
-            // for (int m = 0; m < match_count; m++) {
-            //     char entry_name[MAX_NAME], exit_name[MAX_NAME];
-            //     find_stop_name(matches[m], entry_stop, entry_name);
-            //     find_stop_name(matches[m], exit_stop, exit_name);
-            // printf("Route %s %c: %s -> %s\n", route_ids[matches[m]], route_dirs[matches[m]], entry_name, exit_name);
-            // }
         }
-        // missing type handled later
+  
 
         pending = -1;
     }
