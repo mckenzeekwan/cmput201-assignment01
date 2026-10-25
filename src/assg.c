@@ -271,7 +271,7 @@ int main(int argc, char *argv[]) {
                 char entry_name[MAX_NAME], exit_name[MAX_NAME];
                 find_stop_name(matches[m], entry_stop, entry_name);
                 find_stop_name(matches[m], exit_stop, exit_name);
-            printf("Route %s % c: %s -> %s\n", route_ids[matches[m]], route_dirs[matches[m]], entry_name, exit_name);
+            printf("Route %s %c: %s -> %s\n", route_ids[matches[m]], route_dirs[matches[m]], entry_name, exit_name);
             }
         }
         // missing type handled later
