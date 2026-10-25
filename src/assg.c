@@ -46,7 +46,7 @@ int parse_tap(char *line, int i) {
     char ampm[3], type;
 
     // date, time, type, location
-    int n = sscanf(line, "%d-%d-%d,%d:%d %2[AMP],%c%d", &month, &day, &yr, &hh, &mm, ampm, &type, &loc);
+    int n = sscanf(line, "%d-%d-%d,%d:%d %2[AMP],%c,%d", &month, &day, &yr, &hh, &mm, ampm, &type, &loc);
 
     if (n != 8) {
         // try blank location format (if it is missing tap fare
@@ -54,23 +54,23 @@ int parse_tap(char *line, int i) {
         if (n != 7) return 0; 
         if (type != 'M') return 0;
         loc = -1;
-
-        if (month < 1 || month > 12) return 0;
-        if (day < 1 || day > 31) return 0;
-        if (hh < 1 || hh > 12) return 0;
-        if (mm < 0 || mm > 59) return 0;
-        if (type != 'E' && type != 'X' && type != 'M') return 0;
-        if (ampm[0] != 'A' && ampm[0] != 'P') return 0;
-
-        tap_month[i] = month;
-        tap_day[i] = day;
-        tap_year[i] = yr;
-        tap_hour[i] = hour24(hh, ampm[0]);
-        tap_minute[i] = mm;
-        tap_type[i] = type;
-        tap_location[i] = loc;
-        return 1;
     }
+
+    if (month < 1 || month > 12) return 0;
+    if (day < 1 || day > 31) return 0;
+    if (hh < 1 || hh > 12) return 0;
+    if (mm < 0 || mm > 59) return 0;
+    if (type != 'E' && type != 'X' && type != 'M') return 0;
+    if (ampm[0] != 'A' && ampm[0] != 'P') return 0;
+
+    tap_month[i] = month;
+    tap_day[i] = day;
+    tap_year[i] = yr;
+    tap_hour[i] = hour24(hh, ampm[0]);
+    tap_minute[i] = mm;
+    tap_type[i] = type;
+    tap_location[i] = loc;
+    return 1;
 }
 
 int main(int argc, char *argv[]) { 
