@@ -128,11 +128,15 @@ long total_minutes(int y, int m, int d, int h, int mi) {
     for (int mm = 1; mm <m; mm++) {
         days += days_in_month[mm - 1];
         if (mm == 2 && is_leap(y)) {
-            days == 1;
+            days += 1;
         }
     }
     days += d;
     return days * 24L * 60L + h * 60L + mi;
+}
+
+void format_iso(int y, int m, int d, int h, int mi, char *out) {
+    sprintf(out, "%04d-%02d-%02dT%02d:%02d:00", y, m, d, h, mi);
 }
 
 void format_time(long minutes, char *out) {
@@ -140,7 +144,7 @@ void format_time(long minutes, char *out) {
     long hrs = total_seconds / 3600;
     long mins = (total_seconds % 3600) / 60;
     long secs = total_seconds % 60;
-    sprintf(out, "%ld:%021d:%02ld", hrs, mins, secs);
+    sprintf(out, "%ld:%02ld:%02ld", hrs, mins, secs);
 }
 
 int main(int argc, char *argv[]) { 
