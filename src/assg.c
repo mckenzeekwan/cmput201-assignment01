@@ -198,9 +198,10 @@ int main(int argc, char *argv[]) {
             fclose(tap_history);
             return EXIT_FAILURE;
         }
+
         // when a blank location (-1) is only for type 'M' and has no stop to check
-        if (tap_location[i] != -1 && !stop_exists(tap_location[1])) {
-            printf("Invalid stop ID\n");
+        if (tap_location[i] != -1 && !stop_exists(tap_location[i])) {
+            printf("Invalid stop ID: %d (tap #%d)\n", tap_location[i], i);
             fclose(tap_history);
             return EXIT_FAILURE;
         }
