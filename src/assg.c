@@ -216,16 +216,7 @@ int main(int argc, char *argv[]) {
 
     // load route/schedule data
     char filepath[MAX_PATH];
-    int total = 0;
-    while (fscanf(list_file, "%299s", filepath) == 1) {  // stores word it just read into filepath, %s means read until whitespace(inc newline)
-        total++;
-    }
-    rewind(list_file);  // reset file pointer to the beginning
 
-    // printf("Processing %d schedule files...\n", total);
-
-    // read each schedule file path line by line
-    // int count = 0;
     while (num_routes < MAX_ROUTES && fscanf(list_file, "%299s", filepath) == 1) {
         // count++;
 
@@ -306,21 +297,21 @@ int main(int argc, char *argv[]) {
 
     // first line = record count
     if (fgets(line, sizeof line, tap_history) == NULL || sscanf(line, "%d", &num_taps) != 1) {
-        printf("Error reading tap history file, invalid data format.\n");
+        printf("Invalid data format\n");
         fclose(tap_history);
         return EXIT_FAILURE;
     }
 
     for (int i = 0; i < num_taps && i < MAX_TAPS; i++) {
         if (fgets(line, sizeof line, tap_history) == NULL || !parse_tap(line, i)) {
-            printf("Invalid data format. Failed on line %d: [%s]\n", i, line);
+            printf("Invalid data format\n", i, line);
             fclose(tap_history);
             return EXIT_FAILURE;
         }
 
         // when a blank location (-1) is only for type 'M' and has no stop to check
         if (tap_location[i] != -1 && !stop_exists(tap_location[i])) {
-            printf("Invalid stop ID: %d (tap #%d)\n", tap_location[i], i);
+            printf("Invalid stop ID\n");
             fclose(tap_history);
             return EXIT_FAILURE;
         }
