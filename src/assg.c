@@ -112,6 +112,37 @@ void find_stop_name(int route_idx, int stop_id, char *out) {
     out[0] = '\0';  // if not found, return empty string
 }
 
+// check for leap year
+int is_leap(int year) {
+    return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+}
+
+// convert full date+time into total minutes since year 1
+long total_minutes(int y, int m, int d, int h, int mi) {
+    int days_in_month[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    long days = 0;
+
+    for (int yy = 1; yy < y; yy++) {
+        days += is_leap(yy) ? 366 : 365;
+    }
+    for (int mm = 1; mm <m; mm++) {
+        days += days_in_month[mm - 1];
+        if (mm == 2 && is_leap(y)) {
+            days == 1;
+        }
+    }
+    days += d;
+    return days * 24L * 60L + h * 60L + mi;
+}
+
+void format_time(long minutes, char *out) {
+    long total_seconds = minutes * 60;
+    long hrs = total_seconds / 3600;
+    long mins = (total_seconds % 3600) / 60;
+    long secs = total_seconds % 60;
+    sprintf(out, "%ld:%021d:%02ld", hrs, mins, secs);
+}
+
 int main(int argc, char *argv[]) { 
     if (argc != 3) {  // expects program name, list file and tap history
         fprintf(stderr, "Usage: %s <list_file> <tap_history>\n", argv[0]);
@@ -248,6 +279,13 @@ int main(int argc, char *argv[]) {
     fclose(tap_history);
 
     // reconstructing trips
+    FILE *out = fopen("output.txt", "w");
+    if (out == NULL) {
+        perror("Errpr openig output file");
+        return EXIT_FAILURE;
+    }
+
+
     int pending = -1; // 'E' index waiting for its matching exit
 
     // looping backward through taps[] to process in proper order
@@ -258,6 +296,10 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
+        if (pending == -1) {
+            continue;
+        }
+
         if (tap_type[idx] == 'X') {
             int entry_stop = tap_location[pending];
             int exit_stop = tap_location[idx];
@@ -265,18 +307,37 @@ int main(int argc, char *argv[]) {
             int matches[MAX_MATCHES];
             int match_count = find_matching_routes(entry_stop, exit_stop, matches);
 
-            printf("Trip: entry stop %d -> exit stop %d\n", entry_stop, exit_stop);
-            printf("Matching routes: %d\n", match_count);
-            for (int m = 0; m < match_count; m++) {
+            if (match_count == 1) {
+                int r = matches[0];
+
                 char entry_name[MAX_NAME], exit_name[MAX_NAME];
-                find_stop_name(matches[m], entry_stop, entry_name);
-                find_stop_name(matches[m], exit_stop, exit_name);
-            printf("Route %s %c: %s -> %s\n", route_ids[matches[m]], route_dirs[matches[m]], entry_name, exit_name);
+                find_stop_name(r, entry_stop, entry_name);
+                find_stop_name(r, exit_stop, exit_name);
+
+                char entry_iso[32], exit_iso[32], dur[32];
+                format_iso(tap_year[pending], tap_month[pending], tap_day[pending], tap_hour[pending], tap_minute[pending], entry_iso);
+                format_iso(tap_year[idx], tap_month[idx], tap_day[idx], tap_hour[idx], tap_minute[idx], exit_iso);
+
+                long entry_total = total_minutes(tap_year[pending], tap_month[pending], tap_day[pending], tap_hour[pending], tap_minute[pending]);
+                long exit_total = total_minutes(tap_year[idx], tap_month[idx], tap_day[idx], tap_hour[idx], tap_minute[idx]);
+                format_time(exit_total - entry_total, dur);
+
+                fprintf(out, "%s %c,%s,%s,%s,%s,%s\n", route_ids[r], route_dirs[r], entry_name, exit_name, entry_iso, exit_iso, dur);
             }
+
+            // printf("Trip: entry stop %d -> exit stop %d\n", entry_stop, exit_stop);
+            // printf("Matching routes: %d\n", match_count);
+            // for (int m = 0; m < match_count; m++) {
+            //     char entry_name[MAX_NAME], exit_name[MAX_NAME];
+            //     find_stop_name(matches[m], entry_stop, entry_name);
+            //     find_stop_name(matches[m], exit_stop, exit_name);
+            // printf("Route %s %c: %s -> %s\n", route_ids[matches[m]], route_dirs[matches[m]], entry_name, exit_name);
+            // }
         }
         // missing type handled later
 
         pending = -1;
     }
+    fclose(out);
     return 0;
 }
