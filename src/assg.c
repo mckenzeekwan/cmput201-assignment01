@@ -46,7 +46,7 @@ int parse_tap(char *line, int i) {
     char ampm[3], type;
 
     // date, time, type, location
-    int n = sscanf(line, "%d-%d-%d,%d:%d %2[AMP],%x%d", &month, &day, &yr, &hh, &mm, ampm, &type, &loc);
+    int n = sscanf(line, "%d-%d-%d,%d:%d %2[AMP],%c%d", &month, &day, &yr, &hh, &mm, ampm, &type, &loc);
 
     if (n != 8) {
         // try blank location format (if it is missing tap fare
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < num_taps && i < MAX_TAPS; i++) {
-        if (fegts(line, sizeof line, tap_history) == NULL || !parse_tap(line, i)) {
+        if (fgets(line, sizeof line, tap_history) == NULL || !parse_tap(line, i)) {
             printf("Invalid data format.\n");
             fclose(tap_history);
             return EXIT_FAILURE;
