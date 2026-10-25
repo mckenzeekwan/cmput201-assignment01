@@ -1,16 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_PATH 300  // max size for storing file path strings
+#define MAX_PATH 300
 #define MAX_ROUTES 300
 #define MAX_STOPS_PER_ROUTE 100
-#define MAX_TAPS 2000
-#define MAX_LINE 256
 #define MAX_NAME 100
 #define MAX_ROUTE_ID 16
-#define MAX_MATCHES 14
-#define MAX_HISTORY 2000
-#define MAX_GUESS_CANDIDATES 200
+#define MAX_TAPS 2000
 
 // creating my arrays
 char route_ids[MAX_ROUTES][MAX_ROUTE_ID];
@@ -20,6 +16,62 @@ int stop_ids[MAX_ROUTES][MAX_STOPS_PER_ROUTE];
 char stop_names[MAX_ROUTES][MAX_STOPS_PER_ROUTE][MAX_NAME];
 
 int num_routes = 0; // how many routes are filled in
+
+//tap data
+int tap_year[MAX_TAPS], tap_month[MAX_TAPS], tap_day[MAX_TAPS];
+int tap_hour[MAX_TAPS], tap_minute[MAX_TAPS];
+char tap_type[MAX_TAPS];
+int tap_location[MAX_TAPS];
+int num_taps = 0;
+
+// does the stop ID exist in any of the route's stop lists
+int stop_exists(int stop_id) {
+    for (int r = 0; r < num_routes; r++) {
+        for (int s = 0; s < route_num_stops[r]; s++) {
+            if (stop_ids[r][s] == stop_id) return 1;
+        }
+    }
+    return 0;
+}
+
+//12 hour-time and AM/PM 24hr time
+int hour24(int h, char ampm0) {
+    if (ampm0 == 'A') return (h == 12) ? 0 : h;
+    return (h == 12) ? 12 : h + 12;
+}
+
+//parses tap history line by line into row i of tap arrays
+int parse_tap(char *line, int i) {
+    int month, day, yr, hh, mm, loc;
+    char ampm[3], type;
+
+    // date, time, type, location
+    int n = sscanf(line, "%d-%d-%d,%d:%d %2[AMP],%x%d", &month, &day, &yr, &hh, &mm, ampm, &type, &loc);
+
+    if (n != 8) {
+        // try blank location format (if it is missing tap fare
+        n = sscanf(line, "%d%d-%d,%d:%d %2[AMP],%c", &month, &day, &yr, &hh, &mm, ampm, &type);
+        if (n != 7) return 0; 
+        if (type != 'M') return 0;
+        loc = -1;
+
+        if (month < 1 || month > 12) return 0;
+        if (day < 1 || day > 31) return 0;
+        if (hh < 1 || hh > 12) return 0;
+        if (mm < 0 || mm > 59) return 0;
+        if (type != 'E' && type != 'X' && type != 'M') return 0;
+        if (ampm[0] != 'A' && ampm[0] != 'P') return 0;
+
+        tap_month[i] = month;
+        tap_day[i] = day;
+        tap_year[i] = yr;
+        tap_hour[i] = hour24(hh, ampm[0]);
+        tap_minute[i] = mm;
+        tap_type[i] = type;
+        tap_location[i] = loc;
+        return 1;
+    }
+}
 
 int main(int argc, char *argv[]) { 
     if (argc != 3) {  // expects program name, list file and tap history
@@ -130,10 +182,34 @@ int main(int argc, char *argv[]) {
 
     fclose(list_file);
 
-    printf("Loaded %d routes.\n", num_routes);
-    for (int r=0; r < num_routes && r < 3; r++) {
-        printf("Route %s %c has %d stops. First stop: %d (%s)\n", route_ids[r], route_dirs[r], route_num_stops[r], stop_ids[r][0], stop_names[r][0]);
+    // load tap history
+    char line[256];
+
+    // first line = record count
+    if (fgets(line, sizeof line, tap_history) == NULL || sscanf(line, "%d", &num_taps) != 1) {
+        printf("Error reading tap history file, invalid data format.\n");
+        fclose(tap_history);
+        return EXIT_FAILURE;
+    }
+
+    for (int i = 0; i < num_taps && i < MAX_TAPS; i++) {
+        if (fegts(line, sizeof line, tap_history) == NULL || !parse_tap(line, i)) {
+            printf("Invalid data format.\n");
+            fclose(tap_history);
+            return EXIT_FAILURE;
+        }
+        // when a blank location (-1) is only for type 'M' and has no stop to check
+        if (tap_location[i] != -1 && !stop_exists(tap_location[1])) {
+            printf("Invalid stop ID\n");
+            fclose(tap_history);
+            return EXIT_FAILURE;
+        }
     }
     fclose(tap_history);
+
+    printf("Loaded %d routes and %d taps.\n", num_routes, num_taps);
+    for (int i = 0; i < num_taps; i++) {
+        printf("Tap %d: %04d-%02d-%02d %02d:%02d type=%c loc=%d\n", i, tap_year[i], tap_month[i], tap_day[i], tap_hour[i], tap_minute[i], tap_type[i], tap_location[i]);
+    }
     return 0;
 }
