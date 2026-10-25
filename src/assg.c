@@ -304,7 +304,7 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < num_taps && i < MAX_TAPS; i++) {
         if (fgets(line, sizeof line, tap_history) == NULL || !parse_tap(line, i)) {
-            printf("Invalid data format\n", i, line);
+            printf("Invalid data format\n");
             fclose(tap_history);
             return EXIT_FAILURE;
         }
