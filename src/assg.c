@@ -7,6 +7,7 @@
 #define MAX_NAME 100
 #define MAX_ROUTE_ID 16
 #define MAX_TAPS 2000
+#define MAX_MATCHES 14
 
 // creating my arrays
 char route_ids[MAX_ROUTES][MAX_ROUTE_ID];
@@ -73,6 +74,44 @@ int parse_tap(char *line, int i) {
     return 1;
 }
 
+// pairing entry/exit taps
+int route_has_both_stops(int route_idx, int entry_id, int exit_id) {
+    int has_entry = 0, has_exit = 0;
+    for (int s = 0; s < route_num_stops[route_idx]; s++) {
+        if (stop_ids[route_idx][s] == entry_id) has_entry = 1;
+        if (stop_ids[route_idx][s] == exit_id) has_exit = 1;
+    }
+    return has_entry && has_exit;
+}
+
+// search all routes and find matches woth every route index that contains both stops - returns how many were find
+int find_matching_routes(int entry_id, int exit_id, int matches[]) {
+    int count = 0;
+    for (int r = 0; r < num_routes && count < MAX_MATCHES; r++) {
+        if (route_has_both_stops(r, entry_id, exit_id)) {
+            matches[count] = r;
+            count++;
+        }
+    }
+    return count;
+}
+
+// find stop name
+void find_stop_name(int route_idx, int stop_id, char *out) {
+    for (int s = 0; s < route_num_stops[route_idx]; s++) {
+        if (stop_ids[route_idx][s] == stop_id) {
+            int j = 0;
+            while (stop_names[route_idx][s][j] != '\0') {
+                out[j] = stop_names[route_idx][s][j];
+                j++;
+            }
+            out[j] = '\0';  // null-terminate the string
+            return;
+        }
+    }
+    out[0] = '\0';  // if not found, return empty string
+}
+
 int main(int argc, char *argv[]) { 
     if (argc != 3) {  // expects program name, list file and tap history
         fprintf(stderr, "Usage: %s <list_file> <tap_history>\n", argv[0]);
@@ -95,7 +134,7 @@ int main(int argc, char *argv[]) {
 
     // printf("Both files opened successfully. \n");
 
-    // COUNT FILES IN LIST
+    // load route/schedule data
     char filepath[MAX_PATH];
     int total = 0;
     while (fscanf(list_file, "%299s", filepath) == 1) {  // stores word it just read into filepath, %s means read until whitespace(inc newline)
@@ -208,9 +247,36 @@ int main(int argc, char *argv[]) {
     }
     fclose(tap_history);
 
-    printf("Loaded %d routes and %d taps.\n", num_routes, num_taps);
-    for (int i = 0; i < num_taps; i++) {
-        printf("Tap %d: %04d-%02d-%02d %02d:%02d type=%c loc=%d\n", i, tap_year[i], tap_month[i], tap_day[i], tap_hour[i], tap_minute[i], tap_type[i], tap_location[i]);
+    // reconstructing trips
+    int pending = -1; // 'E' index waiting for its matching exit
+
+    // looping backward through taps[] to process in proper order
+    for (int idx = num_taps - 1; idx >= 0; idx--) {
+
+        if (tap_type[idx] == 'E') {
+            pending = idx;
+            continue;
+        }
+
+        if (tap_type[idx] == 'X') {
+            int entry_stop = tap_location[pending];
+            int exit_stop = tap_location[idx];
+
+            int matches[MAX_MATCHES];
+            int match_count = find_matching_routes(entry_stop, exit_stop, matches);
+
+            printf("Trip: entry stop %d -> exit stop %d\n", entry_stop, exit_stop);
+            printf("Matching routes: %d\n", match_count);
+            for (int m = 0; m < match_count; m++) {
+                char entry_name[MAX_NAME], exit_name[MAX_NAME];
+                find_stop_name(matches[m], entry_stop, entry_name);
+                find_stop_name(matches[m], exit_stop, exit_name);
+            printf("Route %s % c: %s -> %s\n", route_ids[matches[m]], route_dirs[matches[m]], entry_name, exit_name);
+            }
+        }
+        // missing type handled later
+
+        pending = -1;
     }
     return 0;
 }
