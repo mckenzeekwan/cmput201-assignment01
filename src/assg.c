@@ -352,7 +352,7 @@ int main(int argc, char *argv[]) {
                     find_stop_name(r, entry_stop, chosen_entry_name);
                     find_stop_name(r, exit_stop, chosen_exit_name);
 
-                    char entry_iso[32], exit_iso[32], dur;
+                    char entry_iso[32], exit_iso[32], dur[32];
                     format_iso(tap_year[pending], tap_month[pending], tap_day[pending], tap_hour[pending], tap_minute[pending], entry_iso);
                     format_iso(tap_year[idx], tap_month[idx], tap_day[idx], tap_hour[idx], tap_minute[idx], exit_iso);
 
