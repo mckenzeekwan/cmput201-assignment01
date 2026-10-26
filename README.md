@@ -1,13 +1,13 @@
 # Assignment 1 - C Fundamentals, Formatted I/O, Expressions, File I/O, Program Arguments, Selection Statements, Loops, Arrays, Basic Types
 
-# Student Info
+## Student Info
 Name: McKenzee Kwan
 CCID: mckenze1
 Lecture Section: A1
 Instructor Name: Henry Tang
 Lab Section: D05
 
-# File Structure
+## File Structure
 src/assg.c - main program source code
 makefile - builds the 'arc_analyzer' executable
 list_file.txt - list of route schedule file paths
@@ -17,7 +17,7 @@ MS_Testcases/ - milestone test cases
 check_MS.sh - milestone checker script
 check_FS.sh - final submission checker script
 
-# Building it
+## Building it
 From the project root directory. run:
 	make
 This will compile "src/assg.c" using "gcc -Wall _Werror -std=c99" and makes the executable name "arc_analyzer"
@@ -25,12 +25,12 @@ This will compile "src/assg.c" using "gcc -Wall _Werror -std=c99" and makes the 
 To remove the compiled binary and anu generated output file:
 	make clean
 
-# Running it
+## Running it
 The program takes two command line arguments: a list file and a tap history file
 	./arc_analyzer list_file.txt FS_Testcases/1-1-input.txt
 This will read the route schedules that are listed in "list_file.txt", reconstructing trips from the tap history and writes the results to "output.txt". Ambiguous trips means that there is more than one route match. For these trips, the program will prompt on stdout and read the user's route selection input from stdin. 
 
-# Testing
+## Testing
 To run the full final submission test:
 	./check_FS.sh
 
