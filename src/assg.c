@@ -42,8 +42,7 @@ char route_dirs[MAX_ROUTES];
 int route_num_stops[MAX_ROUTES];
 int stop_ids[MAX_ROUTES][MAX_STOPS_PER_ROUTE];
 char stop_names[MAX_ROUTES][MAX_STOPS_PER_ROUTE][MAX_NAME];
-
-int num_routes = 0; // how many routes are filled in
+int num_routes = 0; 
 
 //tap data
 int tap_year[MAX_TAPS], tap_month[MAX_TAPS], tap_day[MAX_TAPS];
@@ -73,7 +72,7 @@ int hour24(int h, char ampm0) {
     return (h == 12) ? 12 : h + 12;
 }
 
-//parses tap history line by line into row i of tap arrays
+//parsing tap history
 int parse_tap(char *line, int i) {
     int month, day, yr, hh, mm, loc;
     char ampm[3], type;
@@ -82,7 +81,7 @@ int parse_tap(char *line, int i) {
     int n = sscanf(line, "%d-%d-%d,%d:%d %2[AMP],%c,%d", &month, &day, &yr, &hh, &mm, ampm, &type, &loc);
 
     if (n != 8) {
-        // try blank location format (if it is missing tap fare
+        // try blank location format (if it is missing tap fare)
         n = sscanf(line, "%d-%d-%d,%d:%d %2[AMP],%c", &month, &day, &yr, &hh, &mm, ampm, &type);
         if (n != 7) return 0; 
         if (type != 'M') return 0;
@@ -116,7 +115,7 @@ int route_has_both_stops(int route_idx, int entry_id, int exit_id) {
     return has_entry && has_exit;
 }
 
-// search all routes and find matches woth every route index that contains both stops - returns how many were find
+// search all routes and find matches with every route index that contains both stops - returns how many were found
 int find_matching_routes(int entry_id, int exit_id, int matches[]) {
     int count = 0;
     for (int r = 0; r < num_routes && count < MAX_MATCHES; r++) {
@@ -149,7 +148,6 @@ int is_leap(int year) {
     return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
 }
 
-// convert full date+time into total minutes since year 1
 long total_minutes(int y, int m, int d, int h, int mi) {
     int days_in_month[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     long days = 0;
@@ -206,7 +204,7 @@ int guess_exit(int entry_stop, int entry_hour) {
 
     }
 
-    if (num_candidates == 0) return -1; // no matching history exists
+    if (num_candidates == 0) return -1; 
 
     // pick highest count, smaller stopID for ties
     int best = 0;
@@ -219,7 +217,7 @@ int guess_exit(int entry_stop, int entry_hour) {
 }
 
 int main(int argc, char *argv[]) { 
-    if (argc != 3) {  // expects program name, list file and tap history
+    if (argc != 3) { 
         fprintf(stderr, "Usage: %s <list_file> <tap_history>\n", argv[0]);
         return EXIT_FAILURE;
     }
@@ -238,15 +236,11 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    // printf("Both files opened successfully. \n");
-
     // load route/schedule data
     char filepath[MAX_PATH];
 
     while (num_routes < MAX_ROUTES && fscanf(list_file, "%299s", filepath) == 1) {
-        // count++;
-
-        // EXTRACTING FILE NAME FROM PATH - dont use pointers
+        // extracting filename from path
         char *base = filepath;  // creates pointer (base) to the start of file path string
         for (char *p = filepath; *p != '\0'; p++) {  // loops through every character in filepath until the string ends
             if (*p == '/') {
@@ -254,8 +248,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        // PARSING ROUTE ID AND DIRECTION FROM THE FILENAME
-        // "route_1_EB.txt"
+        // parsing route id and direction from filename
         char route_id[MAX_ROUTE_ID];
         char direction;
 
@@ -264,27 +257,23 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        // OPEN INDIVIDUAL ROUTE SCHEDULE FILE
+        // ppen indv schedule route file
         FILE *schedule_file = fopen(filepath, "r");
         if (schedule_file == NULL) {
             fprintf(stderr, "Error opening schedule file: %s\n", filepath);
             continue;
         }
 
-
-        // READING FILE HEADER AND NUMBER OF STOPS
-        // header: "<int> <route_name>, <int> Stops"
+        // reading file header and num of stops
         char line[256];
         int num_stops;
         if (fgets(line, 256, schedule_file) == NULL || 
-            sscanf(line, "%*s %*[^,], %d", &num_stops) != 1) {  // try not to use caret
+            sscanf(line, "%*s %*[^,], %d", &num_stops) != 1) {  
             fprintf(stderr, "Bad header in %s\n", filepath);
             fclose(schedule_file);
             continue;
         }
         
-        // printf("schedule #%d is route %s it has %d stops and is in the %c direction\n", count, route_id, num_stops, direction);
-
         int k = 0;
         int sid;
         char sname[MAX_NAME];
@@ -298,7 +287,7 @@ int main(int argc, char *argv[]) {
                         stop_names[num_routes][k][j] = sname[j];
                         j++;
                     }
-                    stop_names[num_routes][k][j] = '\0';  // null-terminate the string
+                    stop_names[num_routes][k][j] = '\0';  
                     k++;
                 }
             }
@@ -335,7 +324,6 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
 
-        // when a blank location (-1) is only for type 'M' and has no stop to check
         if (tap_location[i] != -1 && !stop_exists(tap_location[i])) {
             printf("Invalid stop ID\n");
             fclose(tap_history);
@@ -351,8 +339,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-
-    int pending = -1; // 'E' index waiting for its matching exit
+    int pending = -1; 
 
     // looping backward through taps[] to process in proper order
     for (int idx = num_taps - 1; idx >= 0; idx--) {
@@ -388,7 +375,6 @@ int main(int argc, char *argv[]) {
                     continue;
                 }
             }
-
 
             int matches[MAX_MATCHES];
             int match_count = find_matching_routes(entry_stop, exit_stop, matches);
@@ -453,8 +439,6 @@ int main(int argc, char *argv[]) {
             }
 
         }
-  
-
         pending = -1;
     }
     fclose(out);
