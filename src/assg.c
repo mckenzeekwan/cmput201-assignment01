@@ -403,6 +403,7 @@ int main(int argc, char *argv[]) {
 
                 int choice;
                 scanf("%d", &choice);
+                printf("\n");
 
                 if (choice >= 1 && choice <= match_count) {
                     int r = matches[choice - 1];
