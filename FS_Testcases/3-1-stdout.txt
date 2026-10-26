@@ -5,4 +5,3 @@ Possible routes:
 1. 4 W
 2. 8 W
 Select route (1-2): 
-
