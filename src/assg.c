@@ -321,7 +321,7 @@ int main(int argc, char *argv[]) {
     // reconstructing trips
     FILE *out = fopen("output.txt", "w");
     if (out == NULL) {
-        perror("Errpr openig output file");
+        perror("Error openig output file");
         return EXIT_FAILURE;
     }
 
