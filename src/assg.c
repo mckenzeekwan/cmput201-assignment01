@@ -36,7 +36,7 @@ This software cannot be publicly posted under any circumstances, whether by the 
 #define MAX_MATCHES 14
 #define MAX_HISTORY 2000
 
-// creating my arrays
+// global arrays
 char route_ids[MAX_ROUTES][MAX_ROUTE_ID];
 char route_dirs[MAX_ROUTES];
 int route_num_stops[MAX_ROUTES];
@@ -56,7 +56,7 @@ int hist_exit_stop[MAX_HISTORY];
 int hist_entry_hour[MAX_HISTORY];
 int hist_count = 0;
 
-// does the stop ID exist in any of the route's stop lists
+// check if stop ID exists
 int stop_exists(int stop_id) {
     for (int r = 0; r < num_routes; r++) {
         for (int s = 0; s < route_num_stops[r]; s++) {
@@ -66,7 +66,7 @@ int stop_exists(int stop_id) {
     return 0;
 }
 
-//12 hour-time and AM/PM 24hr time
+// converting 12hr time to 24hr
 int hour24(int h, char ampm0) {
     if (ampm0 == 'A') return (h == 12) ? 0 : h;
     return (h == 12) ? 12 : h + 12;
@@ -95,6 +95,7 @@ int parse_tap(char *line, int i) {
     if (type != 'E' && type != 'X' && type != 'M') return 0;
     if (ampm[0] != 'A' && ampm[0] != 'P') return 0;
 
+    // validations
     tap_month[i] = month;
     tap_day[i] = day;
     tap_year[i] = yr;
@@ -127,7 +128,6 @@ int find_matching_routes(int entry_id, int exit_id, int matches[]) {
     return count;
 }
 
-// find stop name
 void find_stop_name(int route_idx, int stop_id, char *out) {
     for (int s = 0; s < route_num_stops[route_idx]; s++) {
         if (stop_ids[route_idx][s] == stop_id) {
@@ -136,11 +136,11 @@ void find_stop_name(int route_idx, int stop_id, char *out) {
                 out[j] = stop_names[route_idx][s][j];
                 j++;
             }
-            out[j] = '\0';  // null-terminate the string
+            out[j] = '\0';
             return;
         }
     }
-    out[0] = '\0';  // if not found, return empty string
+    out[0] = '\0'; 
 }
 
 // check for leap year
@@ -177,7 +177,7 @@ void format_time(long minutes, char *out) {
     sprintf(out, "%ld:%02ld:%02ld", hrs, mins, secs);
 }
 
-// guess algorithm 
+// guess algorithm for missing taps
 int guess_exit(int entry_stop, int entry_hour) {
     int candidate_stops[MAX_HISTORY];
     int candidate_counts[MAX_HISTORY];
@@ -240,11 +240,10 @@ int main(int argc, char *argv[]) {
     char filepath[MAX_PATH];
 
     while (num_routes < MAX_ROUTES && fscanf(list_file, "%299s", filepath) == 1) {
-        // extracting filename from path
-        char *base = filepath;  // creates pointer (base) to the start of file path string
-        for (char *p = filepath; *p != '\0'; p++) {  // loops through every character in filepath until the string ends
+        char *base = filepath; 
+        for (char *p = filepath; *p != '\0'; p++) {  
             if (*p == '/') {
-                base = p + 1;  // update base to point to character after the slash
+                base = p + 1; 
             }
         }
 
@@ -309,8 +308,7 @@ int main(int argc, char *argv[]) {
 
     // load tap history
     char line[256];
-
-    // first line = record count
+    
     if (fgets(line, sizeof line, tap_history) == NULL || sscanf(line, "%d", &num_taps) != 1) {
         printf("Invalid data format\n");
         fclose(tap_history);
