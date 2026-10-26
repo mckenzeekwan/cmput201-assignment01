@@ -1,6 +1,38 @@
 # Assignment 1 - C Fundamentals, Formatted I/O, Expressions, File I/O, Program Arguments, Selection Statements, Loops, Arrays, Basic Types
 
+# Student Info
+Name: McKenzee Kwan
+CCID: mckenze1
+Lecture Section: A1
+Instructor Name: Henry Tang
+Lab Section: D05
 
+# File Structure
+src/assg.c - main program source code
+makefile - builds the 'arc_analyzer' executable
+list_file.txt - list of route schedule file paths
+simplified_schedules/ - route schedule data files
+FS_Testcases/ - final submission test cases
+MS_Testcases/ - milestone test cases
+check_MS.sh - milestone checker script
+check_FS.sh - final submission checker script
+
+# Building it
+From the project root directory. run:
+	make
+This will compile "src/assg.c" using "gcc -Wall _Werror -std=c99" and makes the executable name "arc_analyzer"
+
+To remove the compiled binary and anu generated output file:
+	make clean
+
+# Running it
+The program takes two command line arguments: a list file and a tap history file
+	./arc_analyzer list_file.txt FS_Testcases/1-1-input.txt
+This will read the route schedules that are listed in "list_file.txt", reconstructing trips from the tap history and writes the results to "output.txt". Ambiguous trips means that there is more than one route match. For these trips, the program will prompt on stdout and read the user's route selection input from stdin. 
+
+# Testing
+To run the full final submission test:
+	./check_FS.sh
 
 ## Arc Card Analyzer
 Congratulations on your new role as a Junior Software Engineer for the **Simplemonton Transit Authority (STA)**! Our city has recently transitioned to the "Arc Card" electronic fare system. While the hardware is working, our data analytics team is struggling to make sense of the raw tap records. 
