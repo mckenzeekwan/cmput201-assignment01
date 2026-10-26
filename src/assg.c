@@ -382,9 +382,9 @@ int main(int argc, char *argv[]) {
                 long exit_total = total_minutes(tap_year[idx], tap_month[idx], tap_day[idx], tap_hour[idx], tap_minute[idx]);
                 format_time(exit_total - entry_total, dur);
 
-                fprintf(out, "%s %c,%s,%s,%s,%s,%s\n", route_ids[r], route_dirs[r], entry_name, exit_name, entry_iso, exit_iso, dur);
+                fprintf(out, "%s %c,%s,%s,%s,%s,%s", route_ids[r], route_dirs[r], entry_name, exit_name, entry_iso, exit_iso, dur);
                 if (guessed) fprintf(out, ",Guessed");
-                // fprintf(out, "\n");
+                fprintf(out, "\n");
 
             } else if (match_count > 1) {
                 char entry_name[MAX_NAME], exit_name[MAX_NAME];
@@ -419,9 +419,9 @@ int main(int argc, char *argv[]) {
                     long exit_total = total_minutes(tap_year[idx], tap_month[idx], tap_day[idx], tap_hour[idx], tap_minute[idx]);
                     format_time(exit_total - entry_total, dur);
 
-                    fprintf(out, "%s %c,%s,%s,%s,%s,%s\n", route_ids[r], route_dirs[r], chosen_entry_name, chosen_exit_name, entry_iso, exit_iso, dur);
+                    fprintf(out, "%s %c,%s,%s,%s,%s,%s", route_ids[r], route_dirs[r], chosen_entry_name, chosen_exit_name, entry_iso, exit_iso, dur);
                     if (guessed) fprintf(out, ",Guessed");
-                    // fprintf(out, "\n");
+                    fprintf(out, "\n");
                 }
             }
 
