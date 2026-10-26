@@ -394,7 +394,7 @@ int main(int argc, char *argv[]) {
                 printf("Ambiguous trip detected:\n");
                 printf("Entry: %d (%s)\n", entry_stop, entry_name);
                 printf("Exit: %d (%s)\n", exit_stop, exit_name);
-                printf("Possible Routes:\n");
+                printf("Possible routes:\n");
                 for (int m = 0; m < match_count; m++) {
                     printf("%d. %s %c\n", m + 1, route_ids[matches[m]], route_dirs[matches[m]]);
 
