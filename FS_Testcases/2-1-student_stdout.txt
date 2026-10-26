@@ -9,7 +9,8 @@ Possible routes:
 5. 8 W
 6. 902 E
 7. 902 W
-Select route (1-7): Ambiguous trip detected:
+Select route (1-7): 
+Ambiguous trip detected:
 Entry: 2002 (University_Transit_Centre)
 Exit: 2724 (107_Street_&_82_Avenue)
 Possible routes:
